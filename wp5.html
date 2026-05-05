@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebQuest: Personas que Caminan en la Vía - Seguridad Peatonal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            --ansv-blue: #003189;
+            --ansv-orange: #da723f;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .card-container { perspective: 1500px; }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        .card-container:hover .card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .card-back { transform: rotateY(180deg); }
+        .flip-card {
+            background-color: transparent;
+            width: 100%;
+            height: 180px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 0.5rem;
+        }
+        .flip-card-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        .flip-card-front {
+            background-color: #ffffff;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            justify-content: center;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        .flip-card:hover .flip-card-front {
+             border-color: var(--ansv-blue);
+             transform: translateY(-5px);
+        }
+        .flip-card-back {
+            background-color: #1f2937;
+            color: white;
+            transform: rotateY(180deg);
+            justify-content: flex-start;
+            align-items: flex-start;
+            padding: 1rem;
+        }
+        .modal { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .screen.active { animation: fadeIn 0.5s ease-in-out; }
+        .chat-bubble-user { background-color: var(--ansv-blue); color: white; }
+        .chat-bubble-ai { background-color: #f0f0f0; color: #333; white-space: pre-wrap; }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #999;
+            animation: bounce 1.3s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .step-card {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .step-card.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .icon-glow {
+            transition: all 0.3s ease;
+        }
+        .step-card:hover .icon-glow {
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-orange-100 to-blue-200 p-2 sm:p-4 md:p-6">
+
+    <div id="app-container" class="w-full max-w-4xl mx-auto bg-white shadow-2xl rounded-xl overflow-hidden my-4 border-4 border-transparent" style="border-image: linear-gradient(to right, var(--ansv-blue), var(--ansv-orange)) 1;">
+
+        <!-- Pantalla 1: Bienvenida -->
+        <div id="screen-welcome" class="screen active relative text-white" style="background-image: url('https://i.imgur.com/OI4pMXN.jpeg'); background-size: container; background-position: center;">
+            <div class="absolute inset-0 bg-black bg-opacity-60"></div>
+            <div class="relative z-10 p-8 text-center flex flex-col items-center justify-center min-h-[60vh]">
+                <img src="https://i.imgur.com/jrW2403.png" alt="Logo ANSV" class="mx-auto h-24 w-auto mb-5 bg-white/80 p-2 rounded-lg">
+                <h1 class="text-3xl md:text-4xl font-extrabold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">WebQuest: Personas que caminan en la vía - seguridad peatonal</h1>
+                <p class="mt-2" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">Módulo P5 – Línea de Profundización</p>
+                <p class="text-white mt-6 max-w-2xl mx-auto text-center" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">Caminar debería ser una experiencia segura, accesible y digna. Sin embargo, las personas peatonas enfrentan diariamente múltiples riesgos en entornos viales mal diseñados, sin señalización adecuada o donde no se respeta su derecho a circular. Esta WebQuest te permitirá identificar esos riesgos, conocer marcos normativos y técnicos, y proponer soluciones desde el liderazgo territorial para transformar zonas peligrosas en espacios protectores.</p>
+                <button onclick="showScreen('screen-summary')" class="mt-8 text-white font-bold py-3 px-8 rounded-lg transition-all shadow-lg transform hover:scale-105" style="background-color: var(--ansv-orange);">
+                    Aceptar la Misión
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla 2: Resumen de Secciones -->
+        <div id="screen-summary" class="screen p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold text-center" style="color: var(--ansv-blue);">Tu Ruta de Exploración</h2>
+            <p class="text-center text-gray-600 mb-8">¡Misión aceptada! Tu viaje se compone de estas etapas clave. Cada tarjeta es un portal a una nueva fase de descubrimiento.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div class="card-container h-56"><div class="card-inner shadow-lg rounded-lg">
+                    <div class="card-front bg-blue-50"><i data-lucide="search" class="w-12 h-12 mb-2" style="color: var(--ansv-blue);"></i><h3 class="text-xl font-bold" style="color: var(--ansv-blue);">Introducción</h3></div>
+                    <div class="card-back text-white" style="background-color: var(--ansv-blue);"><p class="text-sm px-2">Comprende la misión y los desafíos de quienes caminan.</p><button onclick="showScreen('screen-intro-detail')" class="mt-4 bg-white font-bold py-2 px-4 rounded-full text-2xl" style="color: var(--ansv-blue);">+</button></div>
+                </div></div>
+                 <div class="card-container h-56"><div class="card-inner shadow-lg rounded-lg">
+                    <div class="card-front bg-orange-50"><i data-lucide="target" class="w-12 h-12 mb-2" style="color: var(--ansv-orange);"></i><h3 class="text-xl font-bold" style="color: var(--ansv-orange);">Tarea</h3></div>
+                    <div class="card-back text-white" style="background-color: var(--ansv-orange);"><p class="text-sm px-2">Formula tu propuesta para reducir la vulnerabilidad peatonal.</p><button onclick="showScreen('screen-task-detail')" class="mt-4 bg-white font-bold py-2 px-4 rounded-full text-2xl" style="color: var(--ansv-orange);">+</button></div>
+                </div></div>
+                 <div class="card-container h-56"><div class="card-inner shadow-lg rounded-lg">
+                    <div class="card-front bg-blue-50"><i data-lucide="wrench" class="w-12 h-12 mb-2" style="color: var(--ansv-blue);"></i><h3 class="text-xl font-bold" style="color: var(--ansv-blue);">Proceso</h3></div>
+                    <div class="card-back text-white" style="background-color: var(--ansv-blue);"><p class="text-sm px-2">Construye tu proyecto en 3 pasos clave.</p><button onclick="showScreen('screen-process-intro')" class="mt-4 bg-white font-bold py-2 px-4 rounded-full text-2xl" style="color: var(--ansv-blue);">+</button></div>
+                </div></div>
+                 <div class="card-container h-56"><div class="card-inner shadow-lg rounded-lg">
+                    <div class="card-front bg-orange-50"><i data-lucide="book-open-check" class="w-12 h-12 mb-2" style="color: var(--ansv-orange);"></i><h3 class="text-xl font-bold" style="color: var(--ansv-orange);">Recursos</h3></div>
+                    <div class="card-back text-white" style="background-color: var(--ansv-orange);"><p class="text-sm px-2">Tu caja de herramientas: normativas, datos y guías clave.</p><button onclick="showScreen('screen-resources')" class="mt-4 bg-white font-bold py-2 px-4 rounded-full text-2xl" style="color: var(--ansv-orange);">+</button></div>
+                </div></div>
+                 <div class="card-container h-56"><div class="card-inner shadow-lg rounded-lg">
+                    <div class="card-front bg-blue-50"><i data-lucide="clipboard-check" class="w-12 h-12 mb-2" style="color: var(--ansv-blue);"></i><h3 class="text-xl font-bold" style="color: var(--ansv-blue);">Evaluación</h3></div>
+                    <div class="card-back text-white" style="background-color: var(--ansv-blue);"><p class="text-sm px-2">Autoevalúa tu propuesta final con la matriz interactiva.</p><button onclick="showScreen('screen-evaluation-detail')" class="mt-4 bg-white font-bold py-2 px-4 rounded-full text-2xl" style="color: var(--ansv-blue);">+</button></div>
+                </div></div>
+                <div class="card-container h-56"><div class="card-inner shadow-lg rounded-lg">
+                    <div class="card-front bg-orange-50"><i data-lucide="award" class="w-12 h-12 mb-2" style="color: var(--ansv-orange);"></i><h3 class="text-xl font-bold" style="color: var(--ansv-orange);">Conclusión</h3></div>
+                    <div class="card-back text-white" style="background-color: var(--ansv-orange);"><p class="text-sm px-2">Finaliza tu proceso y descarga tus reflexiones.</p><button onclick="showScreen('screen-conclusion-detail')" class="mt-4 bg-white font-bold py-2 px-4 rounded-full text-2xl" style="color: var(--ansv-orange);">+</button></div>
+                </div></div>
+            </div>
+        </div>
+        
+        <!-- Pantalla de Introducción -->
+        <div id="screen-intro-detail" class="screen p-6 md:p-8" style="background-image: url('https://i.imgur.com/fDCd4rv.jpeg'); background-size: container; background-position: center top; background-repeat: no-repeat">
+            <div class="flex justify-between items-center mb-6 mt-16">
+                <h2 class="text-2xl font-bold flex items-center" style="color: var(--ansv-blue);"><i data-lucide="search" class="w-8 h-8 mr-3"></i>Introducción</h2> 
+                <button onclick="showScreen('screen-summary')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver al Resumen</button>
+            </div>
+            <div class="text-gray-800 leading-relaxed mb-8 bg-white/80 backdrop-blur-sm p-6 rounded-lg">
+                <p class="mb-4 text-lg">Caminar debería ser una experiencia segura, accesible y digna. Sin embargo, las personas peatonas enfrentan diariamente múltiples riesgos en entornos viales mal diseñados, sin señalización adecuada o donde no se respeta su derecho a circular.</p>
+                <p class="mb-6">Esta WebQuest te permitirá identificar esos riesgos, conocer marcos normativos y técnicos, y proponer soluciones desde el liderazgo territorial para transformar zonas peligrosas en espacios protectores.</p>
+            </div>
+            <div class="bg-white/90 backdrop-blur-sm p-4 rounded-lg">
+                <h3 class="text-xl font-bold flex items-center mb-3" style="color: var(--ansv-blue);"><span class="text-2xl mr-3">🎯</span>Objetivo de la Misión</h3>
+                <p class="text-gray-800 leading-relaxed">Crear estrategias de movilidad segura para que quienes caminan minimicen su vulnerabilidad en la vía, mejorando la infraestructura y la sensibilización sobre su rol en el espacio público.</p>
+            </div>
+        </div>
+
+        <!-- Pantalla de Tarea -->
+        <div id="screen-task-detail" class="screen p-6 md:p-8" style="background-image: url('https://i.imgur.com/fDCd4rv.jpeg'); background-size: container; background-position: center top; background-repeat: no-repeat">
+             <div class="flex justify-between items-center mb-6 mt-24">
+                 <h2 class="text-2xl font-bold flex items-center" style="color: var(--ansv-orange);"><i data-lucide="target" class="w-8 h-8 mr-3"></i>Tarea</h2>
+                 <button onclick="showScreen('screen-summary')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver al Resumen</button>
+             </div>
+             <p class="text-gray-700 leading-relaxed mb-6 bg-white/80 p-4 rounded-lg">Tu tarea será redactar la propuesta o proyecto completo enfocado en reducir la vulnerabilidad de peatones/as. Debe contemplar intervenciones sobre cruces peligrosos, señalización, cultura ciudadana o accesibilidad, según el contexto local.</p>
+             <hr class="my-8 border-gray-300">
+             <h3 class="text-xl font-bold mb-6 text-gray-800">Estructura de la Propuesta (Haz clic para ver detalles)</h3>
+             <div id="form-container" class="w-full">
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><h3 class="text-lg font-bold w-full">🎯 Objetivo del proyecto</h3><p class="text-sm text-gray-500 mt-2 w-full">¿Cuál es la meta principal?</p></div><div class="flip-card-back"><p class="font-semibold" style="color: var(--ansv-orange);">Pista:</p><p class="text-gray-300 text-xs mt-2">Explica en una frase corta qué quieres conseguir con este proyecto. Sé claro/a y directo/a.</p><p class="text-xs text-gray-500 mt-4">(Máximo 30 palabras)</p></div></div></div>
+                    <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><h3 class="text-lg font-bold w-full">🤔 Justificación</h3><p class="text-sm text-gray-500 mt-2 w-full">¿Por qué es necesario?</p></div><div class="flip-card-back"><p class="font-semibold" style="color: var(--ansv-orange);">Pista:</p><p class="text-gray-300 text-xs mt-2">Cuéntanos por qué es importante hacer este proyecto en ese lugar. ¿Qué problemas o riesgos específicos soluciona?</p><p class="text-xs text-gray-500 mt-4">(Máximo 250 palabras)</p></div></div></div>
+                    <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><h3 class="text-lg font-bold w-full">🛠️ Tipo de medida</h3><p class="text-sm text-gray-500 mt-2 w-full">¿Qué tipo de acción es?</p></div><div class="flip-card-back"><p class="font-semibold" style="color: var(--ansv-orange);">Pista:</p><p class="text-gray-300 text-xs mt-2">¿Qué harás? Por ejemplo: una campaña educativa, una mejora en la infraestructura, una jornada de sensibilización. Menciona los temas clave.</p></div></div></div>
+                    <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><h3 class="text-lg font-bold w-full">👥 Población objetivo</h3><p class="text-sm text-gray-500 mt-2 w-full">¿A quiénes va dirigido?</p></div><div class="flip-card-back"><p class="font-semibold" style="color: var(--ansv-orange);">Pista:</p><p class="text-gray-300 text-xs mt-2">Define a qué grupo de personas quieres ayudar o impactar. Por ejemplo: ciclistas, peatones/as, conductores/as, estudiantes, etc.</p></div></div></div>
+                    <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><h3 class="text-lg font-bold w-full">📝 Descripción</h3><p class="text-sm text-gray-500 mt-2 w-full">¿Cómo lo llevarás a cabo?</p></div><div class="flip-card-back"><p class="font-semibold" style="color: var(--ansv-orange);">Pista:</p><p class="text-gray-300 text-xs mt-2">Detalla paso a paso cómo harás el proyecto. ¿Cuánta gente participará? ¿Necesitas ayuda? ¿Cuánto tiempo tomará?</p><p class="text-xs text-gray-500 mt-4">(Máximo 350 palabras)</p></div></div></div>
+                    <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><h3 class="text-lg font-bold w-full">📈 Resultados esperados</h3><p class="text-sm text-gray-500 mt-2 w-full">¿Qué cambios esperas ver?</p></div><div class="flip-card-back"><p class="font-semibold" style="color: var(--ansv-orange);">Pista:</p><p class="text-gray-300 text-xs mt-2">Describe los cambios positivos que esperas lograr. Piensa también si podría haber algún efecto negativo y cómo lo manejarías.</p><p class="text-xs text-gray-500 mt-4">(Máximo 350 palabras)</p></div></div></div>
+                    <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><h3 class="text-lg font-bold w-full">📊 Evaluación de impacto</h3><p class="text-sm text-gray-500 mt-2 w-full">¿Cómo medirás el éxito?</p></div><div class="flip-card-back"><p class="font-semibold" style="color: var(--ansv-orange);">Pista:</p><p class="text-gray-300 text-xs mt-2">¿Cómo sabrás si funcionó? Propón formas de medirlo, como encuestas, conteo de personas, entrevistas, etc.</p><p class="text-xs text-gray-500 mt-4">(Máximo 350 palabras)</p></div></div></div>
+                    <div class="flip-card"><div class="flip-card-inner"><div class="flip-card-front"><h3 class="text-lg font-bold w-full">📦 Recursos Necesarios</h3><p class="text-sm text-gray-500 mt-2 w-full">¿Qué necesitas para empezar?</p></div><div class="flip-card-back"><p class="font-semibold" style="color: var(--ansv-orange);">Pista:</p><p class="text-gray-300 text-xs mt-2">Haz una lista de lo que necesitas: personas, materiales, tecnología, permisos, dinero, etc.</p></div></div></div>
+                 </div>
+             </div>
+        </div>
+        
+        <!-- Pantalla de Evaluación -->
+        <div id="screen-evaluation-detail" class="screen p-6 md:p-8" style="background-image: url('https://i.imgur.com/fDCd4rv.jpeg'); background-size: container; background-position: center top; background-repeat: no-repeat">
+             <div class="flex justify-between items-start mb-4 mt-24"><h2 class="text-2xl font-bold flex items-center" style="color: var(--ansv-blue);"><i data-lucide="clipboard-check" class="w-8 h-8 mr-3"></i>Autoevaluación del Proyecto</h2><button onclick="showScreen('screen-summary')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver al Resumen</button></div>
+            <p class="text-gray-700 leading-relaxed mb-6 bg-white/80 p-4 rounded-lg">Usa esta matriz interactiva para autoevaluar tu propuesta. Selecciona el nivel que consideras que tu proyecto alcanza en cada criterio para ver tu puntaje potencial.</p>
+            <div id="evaluation-matrix" class="space-y-4">
+                <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"><h3 class="font-bold text-gray-800">Personas impactadas <span class="font-normal text-sm text-gray-500">(máx 10 pts)</span></h3><p class="text-sm text-gray-600 mb-3">Número y diversidad de personas que se beneficiarán.</p><div class="grid grid-cols-2 sm:grid-cols-4 gap-2"><div><label><input type="radio" name="c1" value="0" class="eval-criteria-radio sr-only peer" checked><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">0 pts</p><p class="text-xs text-gray-600 mt-1">No lo especifica</p></div></label></div><div><label><input type="radio" name="c1" value="3" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">3 pts</p><p class="text-xs text-gray-600 mt-1">Menos de 30</p></div></label></div><div><label><input type="radio" name="c1" value="7" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">7 pts</p><p class="text-xs text-gray-600 mt-1">30–100</p></div></label></div><div><label><input type="radio" name="c1" value="10" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">10 pts</p><p class="text-xs text-gray-600 mt-1">Más de 100</p></div></label></div></div></div>
+                <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"><h3 class="font-bold text-gray-800">Inclusión del enfoque de género <span class="font-normal text-sm text-gray-500">(máx 10 pts)</span></h3><p class="text-sm text-gray-600 mb-3">Enfoque en equidad, empoderamiento femenino, masculinidades cuidadoras, etc.</p><div class="grid grid-cols-2 sm:grid-cols-4 gap-2"><div><label><input type="radio" name="c2" value="0" class="eval-criteria-radio sr-only peer" checked><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">0 pts</p><p class="text-xs text-gray-600 mt-1">Ausente</p></div></label></div><div><label><input type="radio" name="c2" value="3" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">3 pts</p><p class="text-xs text-gray-600 mt-1">Mención superficial</p></div></label></div><div><label><input type="radio" name="c2" value="7" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">7 pts</p><p class="text-xs text-gray-600 mt-1">Incorporación parcial</p></div></label></div><div><label><input type="radio" name="c2" value="10" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">10 pts</p><p class="text-xs text-gray-600 mt-1">Integración transversal</p></div></label></div></div></div>
+                <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"><h3 class="font-bold text-gray-800">Impacto del proyecto propuesto <span class="font-normal text-sm text-gray-500">(máx 15 pts)</span></h3><p class="text-sm text-gray-600 mb-3">Claridad, pertinencia territorial y potencial transformador.</p><div class="grid grid-cols-2 sm:grid-cols-4 gap-2"><div><label><input type="radio" name="c3" value="0" class="eval-criteria-radio sr-only peer" checked><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">0 pts</p><p class="text-xs text-gray-600 mt-1">Poco claro</p></div></label></div><div><label><input type="radio" name="c3" value="5" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">5 pts</p><p class="text-xs text-gray-600 mt-1">Idea con potencial</p></div></label></div><div><label><input type="radio" name="c3" value="10" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">10 pts</p><p class="text-xs text-gray-600 mt-1">Coherente</p></div></label></div><div><label><input type="radio" name="c3" value="15" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">15 pts</p><p class="text-xs text-gray-600 mt-1">Transformador y realista</p></div></label></div></div></div>
+                <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"><h3 class="font-bold text-gray-800">Impacto a actores vulnerables <span class="font-normal text-sm text-gray-500">(máx 10 pts)</span></h3><p class="text-sm text-gray-600 mb-3">Focalización en NNA, personas mayores, peatones/as, ciclistas, etc.</p><div class="grid grid-cols-2 sm:grid-cols-4 gap-2"><div><label><input type="radio" name="c4" value="0" class="eval-criteria-radio sr-only peer" checked><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">0 pts</p><p class="text-xs text-gray-600 mt-1">No considerados</p></div></label></div><div><label><input type="radio" name="c4" value="3" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">3 pts</p><p class="text-xs text-gray-600 mt-1">Mención</p></div></label></div><div><label><input type="radio" name="c4" value="7" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">7 pts</p><p class="text-xs text-gray-600 mt-1">Acción concreta</p></div></label></div><div><label><input type="radio" name="c4" value="10" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">10 pts</p><p class="text-xs text-gray-600 mt-1">Foco central</p></div></label></div></div></div>
+                <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"><h3 class="font-bold text-gray-800">Articulación con grupos de valor <span class="font-normal text-sm text-gray-500">(máx 5 pts)</span></h3><p class="text-sm text-gray-600 mb-3">Vinculación con motociclistas, transportadores, docentes, etc.</p><div class="grid grid-cols-2 sm:grid-cols-4 gap-2"><div><label><input type="radio" name="c5" value="0" class="eval-criteria-radio sr-only peer" checked><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">0 pts</p><p class="text-xs text-gray-600 mt-1">Ausente</p></div></label></div><div><label><input type="radio" name="c5" value="2" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">2 pts</p><p class="text-xs text-gray-600 mt-1">Referencia</p></div></label></div><div><label><input type="radio" name="c5" value="4" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">4 pts</p><p class="text-xs text-gray-600 mt-1">Participación parcial</p></div></label></div><div><label><input type="radio" name="c5" value="5" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">5 pts</p><p class="text-xs text-gray-600 mt-1">Participación activa</p></div></label></div></div></div>
+                <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"><h3 class="font-bold text-gray-800">Inclusión de población diferencial <span class="font-normal text-sm text-gray-500">(máx 5 pts)</span></h3><p class="text-sm text-gray-600 mb-3">Incluye mujeres rurales, personas LGBTIQ+, grupos étnicos, migrantes, etc.</p><div class="grid grid-cols-2 sm:grid-cols-4 gap-2"><div><label><input type="radio" name="c6" value="0" class="eval-criteria-radio sr-only peer" checked><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">0 pts</p><p class="text-xs text-gray-600 mt-1">No aplicable</p></div></label></div><div><label><input type="radio" name="c6" value="2" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">2 pts</p><p class="text-xs text-gray-600 mt-1">Mención</p></div></label></div><div><label><input type="radio" name="c6" value="4" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">4 pts</p><p class="text-xs text-gray-600 mt-1">Actividades específicas</p></div></label></div><div><label><input type="radio" name="c6" value="5" class="eval-criteria-radio sr-only peer"><div class="p-2 border rounded-lg text-center cursor-pointer hover:bg-gray-50 peer-checked:bg-blue-100 peer-checked:border-blue-500 peer-checked:shadow-sm transition-all"><p class="font-bold text-sm" style="color: var(--ansv-blue);">5 pts</p><p class="text-xs text-gray-600 mt-1">Enfoque estructural</p></div></label></div></div></div>
+            </div>
+            <div class="mt-8 text-center bg-blue-50 p-6 rounded-lg">
+                <h3 class="text-xl font-bold text-gray-800">Puntaje Total de Autoevaluación</h3>
+                <p class="text-5xl font-extrabold mt-2" style="color: var(--ansv-blue);"><span id="current-score">0</span> / 55</p>
+            </div>
+        </div>
+        
+        <!-- Pantalla de Conclusión -->
+        <div id="screen-conclusion-detail" class="screen p-6 md:p-8">
+            <div class="flex justify-between items-start mb-4">
+                <h2 class="text-2xl font-bold flex items-center" style="color: var(--ansv-blue);"><i data-lucide="award" class="w-8 h-8 mr-3"></i>Conclusión y Próximos Pasos</h2>
+                <button onclick="showScreen('screen-summary')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver al Resumen</button>
+            </div>
+            <div class="space-y-6">
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Asistente de IA para tu Proyecto</h3>
+                    <p class="text-gray-700 mb-4 text-sm">Ahora que has reflexionado, usa esta herramienta para dar forma final a tu propuesta. Te ayudará a estructurar, redactar y fortalecer tus ideas.</p>
+                    <a href="https://sites.google.com/view/asistenteparaelproyectoensv/inicio?read_current=1" target="_blank" class="inline-block text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity shadow-md text-sm" style="background-color: var(--ansv-orange);">Acceder al Asistente</a>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">Videos Clave</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                         <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-lg"><iframe class="w-full h-full" src="https://www.youtube.com/embed/SPkPhh2eL3c" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+                         <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-lg"><iframe class="w-full h-full" src="https://www.youtube.com/embed/RdJf-xMTsMg" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+                         <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-lg"><iframe class="w-full h-full" src="https://www.youtube.com/embed/XvvU9jTb5-k" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 bg-green-50 p-6 rounded-lg text-center border border-green-200">
+                <h3 class="font-bold text-lg text-green-800 flex items-center justify-center"><i data-lucide="download" class="w-6 h-6 mr-3"></i>Descarga tus Reflexiones</h3>
+                <p class="text-gray-600 mt-2 mb-4 text-sm">Organiza todas tus reflexiones en un documento de texto, listo para ser la base de tu proyecto final.</p>
+                <button onclick="downloadProjectAsTxt()" class="bg-green-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-green-700 transition-colors shadow-md text-sm">Descargar Reflexiones (.txt)</button>
+            </div>
+            <div class="mt-8 bg-blue-50 p-6 rounded-lg text-center">
+                <h3 class="font-bold text-lg" style="color: var(--ansv-blue);">¡Misión Cumplida!</h3>
+                <p class="text-gray-600 mt-2 mb-4">Has finalizado el proceso de investigación. </p>
+               
+            </div>
+        </div>
+        
+        <!-- Pantalla de Recursos -->
+        <div id="screen-resources" class="screen p-6 md:p-8" style="background-image: url('https://i.imgur.com/fDCd4rv.jpeg'); background-size: container; background-position: center top; background-repeat: no-repeat">
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-4 mt-24">
+                    <h2 class="text-2xl font-bold flex items-center" style="color: var(--ansv-orange);"><i data-lucide="book-open-check" class="w-8 h-8 mr-3"></i>Centro de Recursos</h2>
+                    <button onclick="showScreen('screen-summary')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver al Resumen</button>
+                </div>
+                <p class="text-gray-600 mb-8">Aquí tienes todos los materiales para tu investigación, organizados para un fácil acceso.</p>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center"><i data-lucide="scale" class="w-5 h-5 mr-2" style="color: var(--ansv-blue);"></i>Normatividad Clave (Nacional)</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <a href="https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Leyes/1826223" target="_blank" class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="file-text" class="w-8 h-8 mr-3" style="color: var(--ansv-blue);"></i><div><p class="font-semibold text-gray-800 text-sm">Ley 769 de 2002 - Código Nacional de Tránsito</p></div></a>
+                            <a href="https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Leyes/1682377" target="_blank" class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="file-text" class="w-8 h-8 mr-3" style="color: var(--ansv-blue);"></i><div><p class="font-semibold text-gray-800 text-sm">Ley 1503 de 2011 - Formación en Seguridad Vial</p></div></a>
+                            <a href="https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Leyes/30044456" target="_blank" class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="file-text" class="w-8 h-8 mr-3" style="color: var(--ansv-blue);"></i><div><p class="font-semibold text-gray-800 text-sm">Ley 2251 de 2022 - Ley Julián Esteban</p></div></a>
+                            <a href="https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Resolucion/30049055" target="_blank" class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="file-text" class="w-8 h-8 mr-3" style="color: var(--ansv-blue);"></i><div><p class="font-semibold text-gray-800 text-sm">Resolución 20223040040595 de 2022 - Metodología PESV</p></div></a>
+                            <a href="https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Resolucion/30054056" target="_blank" class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="file-text" class="w-8 h-8 mr-3" style="color: var(--ansv-blue);"></i><div><p class="font-semibold text-gray-800 text-sm">Resolución 20243040045005 de 2024 - Manual de Señalización Vial</p></div></a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center"><i data-lucide="bar-chart-3" class="w-5 h-5 mr-2" style="color: var(--ansv-blue);"></i>Datos y Estadísticas</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <a href="https://ansv.gov.co/es/observatorio/estad%C3%ADsticas/cifras-ano-en-curso" target="_blank" class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="line-chart" class="w-8 h-8 mr-3" style="color: var(--ansv-blue);"></i><div><p class="font-semibold text-gray-800 text-sm">Observatorio ANSV - Cifras por actor vial</p></div></a>
+                            <a href="https://www.medicinalegal.gov.co/cifras-estadisticas/forensis" target="_blank" class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors"><i data-lucide="file-search" class="w-8 h-8 mr-3" style="color: var(--ansv-blue);"></i><div><p class="font-semibold text-gray-800 text-sm">Forensis - Cifras y Datos (Medicina Legal)</p></div></a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center"><i data-lucide="book-marked" class="w-5 h-5 mr-2" style="color: var(--ansv-blue);"></i>Guías y Herramientas (Nacional e Internacional)</h3>
+                        <div class="space-y-3">
+                             <h4 class="font-semibold text-gray-800 text-sm mt-4">Urbanismo Táctico y Pacificación del Tránsito</h4>
+                             <a href="https://observatorio.dadep.gov.co/publicaciones/abc-cartilla-urbanismo-tactico" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="pen-tool" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Cartilla ABC de Urbanismo Táctico (DADP)</span></a>
+                             <a href="https://espacioyciudad.com/wp-content/uploads/2019/02/Guia_de_Urbanismo_Tactico_CAF_y_Espacio_y_Ciudad_2018_Final.pdf" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="map-pin" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Guía de Urbanismo Táctico (CAF y Espacio y Ciudad)</span></a>
+                             <a href="https://www.undp.org/es/guia_urbanismo_tactico_tu_calle" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="road" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Guía Urbanismo Táctico (PNUD)</span></a>
+                             <a href="https://ansv.gov.co/es/prensa-publicaciones/12128" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="traffic-cone" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Guía de Pacificación del Tránsito (ANSV)</span></a>
+                             <h4 class="font-semibold text-gray-800 text-sm mt-4">Seguridad Peatonal y Ciudades Transitables</h4>
+                             <a href="https://ansv.gov.co/es/escuela/9057" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="walk" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Prelación del peatón/a en la vía (ANSV)</span></a>
+                             <a href="https://ansv.gov.co/es/escuela/9758" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="user-plus" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Movilidad peatones/as - persona mayor (ANSV)</span></a>
+                             <a href="https://www.nhtsa.gov/es/seguridad-vial/seguridad-peatonal" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="shield" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Seguridad Peatonal (NHTSA)</span></a>
+                             <a href="https://publications.iadb.org/es/publications/spanish/viewer/El-rol-del-transporte-activo-en-la-mejora-de-la-movilidad-de-las-personas-de-bajos-ingresos-en-America-Latina-y-el-Caribe.pdf" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="walking-stick" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>El rol del transporte activo en la mejora de la movilidad (BID)</span></a>
+                             <a href="http://www.scielo.org.co/scielo.php?script=sci_arttext&pid=S0120-36302021000200033" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="map-street" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>El peatón como base de una movilidad urbana sostenible (SciELO)</span></a>
+                             <a href="https://iris.who.int/server/api/core/bitstreams/c536ab3e-1b11-4000-a959-59bcb5d8d73e/content" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="book-open" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Seguridad Peatonal (OMS)</span></a>
+                             <a href="https://walk21.com/wp-content/uploads/2021/05/Espanol-ICW-translation.pdf" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="file-text" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Carta Internacional del Caminar (Walk21)</span></a>
+                             <a href="https://www.healthychildren.org/Spanish/news/Paginas/child-pedestrian-safety-creating-walkable-friendly-communities.aspx" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="baby" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Seguridad para los pequeños/as peatones/as (AAP)</span></a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center"><i data-lucide="bar-chart-3" class="w-5 h-5 mr-2" style="color: var(--ansv-blue);"></i>Informes y Estudios (Internacional)</h3>
+                        <div class="space-y-3">
+                             <a href="https://www.itf-oecd.org/sites/default/files/docs/irtad-road-safety-annual-report-2024.pdf" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="bar-chart" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Informe Anual de Seguridad Vial 2024 (IRT - Inglés)</span></a>
+                             <a href="https://www.oecd.org/content/dam/oecd/en/publications/reports/2023/12/road-safety-annual-report-2023_f83ca809/8654c572-en.pdf" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="bar-chart-2" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Informe Anual de Seguridad Vial 2023 (OECD - Inglés)</span></a>
+                             <a href="https://www.itf-oecd.org/sites/default/files/docs/irtad-road-safety-annual-report-2022.pdf" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="bar-chart-3" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Informe Anual de Seguridad Vial 2022 (IRT - Inglés)</span></a>
+                             <a href="https://www.worldbank.org/en/topic/transport/publication/road-safety-management-capacity-review-guidelines" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="file-text" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Guías de Revisión de Capacidad de Gestión de Seguridad Vial (Banco Mundial - Inglés)</span></a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center"><i data-lucide="users" class="w-5 h-5 mr-2" style="color: var(--ansv-blue);"></i>Organismos y ONGs</h3>
+                        <div class="space-y-3">
+                             <a href="https://www.safekids.org/" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="heart" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Safe Kids Worldwide (Inglés)</span></a>
+                             <a href="https://www.prudentiallife.co.ke/safe-steps/" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="footprints" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Safe Steps (Prudential Life - Inglés)</span></a>
+                             <a href="https://www.grsproadsafety.org/" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="shield" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Global Road Safety Partnership (GRSP - Inglés)</span></a>
+                             <a href="https://www.grsproadsafety.org/resources/botnar-challenge-toolkit/" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="tool" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Botnar Child Road Safety Challenge Toolkit (GRSP - Inglés)</span></a>
+                             <a href="https://www.savethechildren.es/supervivencia-infantil-0" target="_blank" class="flex items-center w-full bg-gray-100 p-3 rounded-lg hover:bg-blue-100 transition-colors text-sm"><i data-lucide="child" class="w-6 h-6 mr-3" style="color: var(--ansv-blue);"></i><span>Save the Children (Enfoque en Salud y Supervivencia Infantil)</span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantallas del Proceso -->
+        <div id="screen-process-intro" class="screen p-6 md:p-8 relative overflow-hidden" style="background-image: url('https://i.imgur.com/fDCd4rv.jpeg'); background-size: container; background-position: center top; background-repeat: no-repeat">
+            <div class="relative z-10">
+                <div class="flex justify-between items-start mb-4 mt-24">
+                    <h2 class="text-2xl md:text-3xl font-bold flex items-center" style="color: var(--ansv-blue);"><i data-lucide="wrench" class="w-8 h-8 mr-3"></i>Proceso: Construye tu Propuesta</h2>
+                    <button onclick="showScreen('screen-summary')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver al Resumen</button>
+                </div>
+                <p class="text-gray-700 mb-8 max-w-3xl text-lg bg-white/80 p-4 rounded-lg">Has llegado al núcleo de tu misión. Aquí, tus ideas tomarán forma. A través de 3 pasos guiados, pasarás de la teoría a la práctica, investigando, reflexionando y discutiendo tus hallazgos con un asistente de IA.</p>
+                <div class="bg-blue-50 border-l-4 p-6 rounded-r-lg mb-10" style="border-color: var(--ansv-blue);">
+                    <h3 class="font-bold text-xl" style="color: var(--ansv-blue);">Tu viaje se divide en 3 momentos clave:</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                     <div class="step-card bg-gradient-to-br from-indigo-600 to-indigo-800 p-6 rounded-2xl shadow-lg text-white text-center flex flex-col items-center transform hover:-translate-y-2 transition-transform duration-300 cursor-pointer" onclick="showScreen('screen-process-step1')">
+                        <div class="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4 icon-glow"><i data-lucide="shield-alert" class="w-8 h-8 text-white"></i></div>
+                        <h3 class="text-lg font-bold mb-1">Paso 1</h3><p class="opacity-90 text-sm">Comprende la vulnerabilidad</p>
+                    </div>
+                     <div class="step-card bg-gradient-to-br from-purple-600 to-purple-800 p-6 rounded-2xl shadow-lg text-white text-center flex flex-col items-center transform hover:-translate-y-2 transition-transform duration-300 cursor-pointer" style="transition-delay: 200ms;" onclick="showScreen('screen-process-step2')">
+                        <div class="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4 icon-glow"><i data-lucide="search" class="w-8 h-8 text-white"></i></div>
+                        <h3 class="text-lg font-bold mb-1">Paso 2</h3><p class="opacity-90 text-sm">Reconoce factores de riesgo</p>
+                    </div>
+                     <div class="step-card bg-gradient-to-br from-teal-500 to-teal-700 p-6 rounded-2xl shadow-lg text-white text-center flex flex-col items-center transform hover:-translate-y-2 transition-transform duration-300 cursor-pointer" style="transition-delay: 400ms;" onclick="showScreen('screen-process-step3')">
+                        <div class="flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4 icon-glow"><i data-lucide="book-check" class="w-8 h-8 text-white"></i></div>
+                        <h3 class="text-lg font-bold mb-1">Paso 3</h3><p class="opacity-90 text-sm">Consulta normas y prácticas</p>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-12 mb-4">
+                    <button onclick="showScreen('screen-process-step1')" class="text-white font-bold py-3 px-8 rounded-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl transform hover:scale-105" style="background-color: var(--ansv-orange);">Comenzar Proceso</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pasos del Proceso -->
+        <div id="screen-process-step1" class="screen p-6 md:p-8">
+            <div class="flex justify-between items-start mb-4"><h2 class="text-2xl font-bold flex items-center" style="color: var(--ansv-blue);"><i data-lucide="shield-alert" class="w-8 h-8 mr-3"></i>Paso 1: Comprende la vulnerabilidad de las personas que caminan</h2><button onclick="showScreen('screen-process-intro')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver a Pasos</button></div>
+            <div class="flex justify-center items-center space-x-4 mb-6">
+                <div class="p-2 rounded-full" style="background-color: var(--ansv-orange);"><i data-lucide="shield-alert" class="w-6 h-6 text-white"></i></div>
+                <div class="p-2 rounded-full bg-gray-200"><i data-lucide="search" class="w-6 h-6 text-gray-400"></i></div>
+                <div class="p-2 rounded-full bg-gray-200"><i data-lucide="book-check" class="w-6 h-6 text-gray-400"></i></div>
+            </div>
+            <p class="mb-4 text-gray-600">Para iniciar, es fundamental entender por qué las personas que caminan son priorizadas en la movilidad. Analiza los datos y reflexiona sobre su rol y sus derechos en la vía.</p>
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg shadow-lg shadow-orange-100/50 border border-orange-200">
+                <h4 class="font-bold mb-2" style="color: var(--ansv-blue);">Recursos Clave para este Paso:</h4>
+                <div class="space-y-2">
+                    <a href="https://ansv.gov.co/es/observatorio/estad%C3%ADsticas/cifras-ano-en-curso" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="line-chart" class="w-4 h-4 mr-2"></i>Datos de siniestralidad peatonal (Observatorio ANSV)</a>
+                    <a href="https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Leyes/1826223" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="file-text" class="w-4 h-4 mr-2"></i>Código Nacional de Tránsito (Art. 3, 58, 60 y Tít. III)</a>
+                     <a href="https://ansv.gov.co/es/escuela/9057" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="walk" class="w-4 h-4 mr-2"></i>Prelación del peatón/a en la vía (ANSV)</a>
+                </div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label for="reflexion1" class="font-semibold text-sm block mb-2 flex items-center"><i data-lucide="brain-circuit" class="w-5 h-5 mr-2" style="color: var(--ansv-blue);"></i>Tu Reflexión:</label>
+                <textarea id="reflexion1" rows="4" class="w-full p-2 border rounded-md text-sm" placeholder="¿Quiénes caminan más en tu territorio y en qué condiciones lo hacen?"></textarea>
+                
+            </div>
+            <div class="flex justify-end mt-8"><button onclick="showScreen('screen-process-step2')" class="text-white font-bold py-2 px-6 rounded-lg hover:opacity-90" style="background-color: var(--ansv-orange);">Siguiente</button></div>
+        </div>
+
+        <div id="screen-process-step2" class="screen p-6 md:p-8">
+            <div class="flex justify-between items-start mb-4"><h2 class="text-2xl font-bold flex items-center" style="color: var(--ansv-blue);"><i data-lucide="search" class="w-8 h-8 mr-3"></i>Paso 2: Reconoce los factores de riesgo</h2><button onclick="showScreen('screen-process-intro')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver a Pasos</button></div>
+            <div class="flex justify-center items-center space-x-4 mb-6">
+                <div class="p-2 rounded-full bg-gray-200"><i data-lucide="shield-alert" class="w-6 h-6 text-gray-400"></i></div>
+                <div class="p-2 rounded-full" style="background-color: var(--ansv-orange);"><i data-lucide="search" class="w-6 h-6 text-white"></i></div>
+                <div class="p-2 rounded-full bg-gray-200"><i data-lucide="book-check" class="w-6 h-6 text-gray-400"></i></div>
+            </div>
+            <p class="mb-4 text-gray-600">Ahora, enfócate en tu entorno. Identifica qué elementos de la infraestructura y qué comportamientos de otros y otras participantes de la vía ponen en peligro a quienes caminan.</p>
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg shadow-lg shadow-orange-100/50 border border-orange-200">
+                <h4 class="font-bold mb-2" style="color: var(--ansv-blue);">Recursos Clave para este Paso:</h4>
+                <div class="space-y-2">
+                    <a href="https://iris.who.int/server/api/core/bitstreams/c536ab3e-1b11-4000-a959-59bcb5d8d73e/content" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="book-open" class="w-4 h-4 mr-2"></i>Seguridad Peatonal (OMS)</a>
+                    <a href="https://ansv.gov.co/es/escuela/9758" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="user-plus" class="w-4 h-4 mr-2"></i>Movilidad peatones/as - persona mayor (ANSV)</a>
+                    <a href="https://publications.iadb.org/es/publications/spanish/viewer/El-rol-del-transporte-activo-en-la-mejora-de-la-movilidad-de-las-personas-de-bajos-ingresos-en-America-Latina-y-el-Caribe.pdf" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="walking-stick" class="w-4 h-4 mr-2"></i>El rol del transporte activo en la mejora de la movilidad (BID)</a>
+                </div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label for="reflexion2" class="font-semibold text-sm block mb-2 flex items-center"><i data-lucide="brain-circuit" class="w-5 h-5 mr-2" style="color: var(--ansv-blue);"></i>Tu Reflexión:</label>
+                <textarea id="reflexion2" rows="4" class="w-full p-2 border rounded-md text-sm" placeholder="¿Qué puntos críticos identificas como caminante en tu comunidad? (cruces, andenes, velocidades, etc.)"></textarea>
+               
+            </div>
+            <div class="flex justify-between mt-8"><button onclick="showScreen('screen-process-step1')" class="font-semibold hover:underline" style="color: var(--ansv-blue);">Anterior</button><button onclick="showScreen('screen-process-step3')" class="text-white font-bold py-2 px-6 rounded-lg hover:opacity-90" style="background-color: var(--ansv-orange);">Siguiente</button></div>
+        </div>
+        
+        <div id="screen-process-step3" class="screen p-6 md:p-8">
+            <div class="flex justify-between items-start mb-4"><h2 class="text-2xl font-bold flex items-center" style="color: var(--ansv-blue);"><i data-lucide="book-check" class="w-8 h-8 mr-3"></i>Paso 3: Consulta las normas y buenas prácticas</h2><button onclick="showScreen('screen-process-intro')" class="text-sm font-semibold hover:underline flex items-center" style="color: var(--ansv-blue);"><i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>Volver a Pasos</button></div>
+             <div class="flex justify-center items-center space-x-4 mb-6">
+                <div class="p-2 rounded-full bg-gray-200"><i data-lucide="shield-alert" class="w-6 h-6 text-gray-400"></i></div>
+                <div class="p-2 rounded-full bg-gray-200"><i data-lucide="search" class="w-6 h-6 text-gray-400"></i></div>
+                <div class="p-2 rounded-full" style="background-color: var(--ansv-orange);"><i data-lucide="book-check" class="w-6 h-6 text-white"></i></div>
+            </div>
+            <p class="mb-4 text-gray-600">Con los riesgos identificados, es momento de buscar soluciones. Explora las normativas que protegen a las personas que caminan y las buenas prácticas en diseño urbano que pueden transformar tu entorno.</p>
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg shadow-lg shadow-orange-100/50 border border-orange-200">
+                <h4 class="font-bold mb-2" style="color: var(--ansv-blue);">Recursos Clave para este Paso:</h4>
+                <div class="space-y-2">
+                     <a href="https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Leyes/1826223" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="file-text" class="w-4 h-4 mr-2"></i>Código Nacional de Tránsito (pasos peatonales, zonas escolares)</a>
+                     <a href="https://www.undp.org/es/guia_urbanismo_tactico_tu_calle" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="road" class="w-4 h-4 mr-2"></i>Guía Urbanismo Táctico (PNUD)</a>
+                     <a href="https://ansv.gov.co/es/prensa-publicaciones/12128" target="_blank" class="flex items-center text-sm text-blue-700 hover:underline"><i data-lucide="traffic-cone" class="w-4 h-4 mr-2"></i>Guía de Pacificación del Tránsito (ANSV)</a>
+                </div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <label for="reflexion3" class="font-semibold text-sm block mb-2 flex items-center"><i data-lucide="brain-circuit" class="w-5 h-5 mr-2" style="color: var(--ansv-blue);"></i>Tu Reflexión:</label>
+                <textarea id="reflexion3" rows="4" class="w-full p-2 border rounded-md text-sm" placeholder="¿Qué normativa respalda tu propuesta y qué referentes de buenas prácticas puedes adaptar a tu contexto?"></textarea>
+                
+            </div>
+            <div class="flex justify-between mt-8"><button onclick="showScreen('screen-process-step2')" class="font-semibold hover:underline" style="color: var(--ansv-blue);">Anterior</button><button onclick="showScreen('screen-conclusion-detail')" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700">Finalizar Proceso</button></div>
+        </div>
+    </div>
+
+    <!-- Modales de IA - CHAT SIMULATOR -->
+    <div id="ai-chat-modal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 flex flex-col" style="height: 80vh;">
+            <div class="p-4 border-b flex justify-between items-center" style="background-color: var(--ansv-blue);">
+              
+                <button onclick="closeModal('ai-chat-modal')" class="text-white">&times;</button>
+            </div>
+            <div id="chat-history" class="flex-1 p-4 overflow-y-auto space-y-4"></div>
+            <div id="typing-indicator-container" class="p-4 hidden">
+                <div class="chat-bubble-ai inline-block rounded-lg p-3">
+                    <div class="typing-indicator"><span></span><span></span><span></span></div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50">
+                <div class="flex items-center space-x-2">
+                     <input type="text" id="chat-input" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-orange-500" placeholder="Escribe tu idea o pregunta...">
+                    <button id="chat-send-btn" class="text-white font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity" style="background-color: var(--ansv-orange);"><i data-lucide="send" class="w-5 h-5"></i></button>
+                </div>
+                <div class="mt-3 text-center">
+                    <button id="summarize-btn" onclick="summarizeAndSave()" class="text-sm font-semibold py-2 px-4 rounded-lg flex items-center justify-center w-full bg-gray-200 hover:bg-gray-300 transition-colors">
+                        <i data-lucide="file-check-2" class="w-4 h-4 mr-2"></i>Mejorar y Guardar en Reflexión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Librerías JS al final del body -->
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script>
+        let currentModalContext = '';
+        let chatHistoryForApi = [];
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+            }
+            document.getElementById('app-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function openModal(context) {
+            currentModalContext = context;
+            chatHistoryForApi = [];
+            const modal = document.getElementById('ai-chat-modal');
+            const chatHistory = document.getElementById('chat-history');
+            const chatInput = document.getElementById('chat-input');
+            chatHistory.innerHTML = '';
+            chatInput.value = '';
+
+            const reflexionId = `reflexion${context.replace('modal', '')}`;
+            const reflexionTextarea = document.getElementById(reflexionId);
+            const userInitialText = reflexionTextarea.value.trim();
+
+            const defaultMessages = {
+                'modal1': '¡Hola! Soy Paso a Paso-Guía. Empecemos a caminar por este tema. ¿Qué riesgos específicos has observado que enfrentan las personas que caminan en tu comunidad?',
+                'modal2': '¡Excelente! Ahora, identifiquemos los puntos críticos. ¿Qué zonas o situaciones en tu entorno son más peligrosas para los peatones/as? Pensemos en cruces, andenes, etc.',
+                'modal3': '¡Vamos a la acción! ¿Conoces alguna normativa o buena práctica de infraestructura (como urbanismo táctico) que pueda ayudar a proteger a las personas que caminan en tu área?',
+            };
+            
+            let initialAiMessage = userInitialText ? `¡Hola! Soy Paso a Paso-Guía. Leí tu reflexión: "${userInitialText}". ¡Es un gran comienzo! Para seguir explorando, ¿cómo crees que esa situación impacta el derecho de las personas a moverse libremente y con seguridad?` : defaultMessages[context];
+            
+            if (userInitialText) {
+                 chatHistoryForApi.push({ role: "user", parts: [{ text: `Mi reflexión inicial es: ${userInitialText}` }] });
+            }
+            
+            addMessageToChat('ai', initialAiMessage);
+            chatHistoryForApi.push({ role: "model", parts: [{ text: initialAiMessage }] });
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.modal-content').classList.remove('scale-95');
+                }, 10);
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('opacity-0');
+                modal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 300);
+            }
+        }
+
+        function addMessageToChat(sender, message) {
+            const chatHistory = document.getElementById('chat-history');
+            const bubble = document.createElement('div');
+            bubble.classList.add('p-3', 'rounded-lg', 'max-w-xs', 'md:max-w-md', 'text-sm');
+            bubble.textContent = message;
+
+            if (sender === 'user') {
+                bubble.classList.add('chat-bubble-user', 'self-end', 'ml-auto');
+            } else {
+                bubble.classList.add('chat-bubble-ai', 'self-start', 'mr-auto');
+            }
+            chatHistory.appendChild(bubble);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+        
+        async function handleSendMessage() {
+            const chatInput = document.getElementById('chat-input');
+            const userInput = chatInput.value.trim();
+            if (userInput === '') return;
+
+            addMessageToChat('user', userInput);
+            chatHistoryForApi.push({ role: "user", parts: [{ text: userInput }] });
+            chatInput.value = '';
+            chatInput.disabled = true;
+
+            const typingIndicator = document.getElementById('typing-indicator-container');
+            typingIndicator.style.display = 'block';
+
+            const systemPrompt = `Eres Paso a Paso-Guía, un asistente experto en seguridad vial, enfocado en la protección de peatones/as y la mejora de entornos urbanos. Tu objetivo es ayudar a los usuarios y usuarias a diseñar propuestas innovadoras.
+
+            Habla de forma amigable, proactiva y orientada a soluciones prácticas.
+            
+            **REGLAS DE FORMATO CRÍTICAS Y OBLIGATORIAS:**
+            1. Para enfatizar ideas clave, USA MAYÚSCULAS.
+            2. Está terminantemente PROHIBIDO usar asteriscos (*) o cualquier otro símbolo de markdown. NUNCA uses negrita.
+            3. Usa PÁRRAFOS CORTOS y saltos de línea.
+            
+            Tu conocimiento se basa en:
+            - PRIMERO: Los recursos de la WebQuest sobre personas peatonas (normativas, datos de siniestralidad, guías de urbanismo táctico y pacificación del tránsito, documentos internacionales).
+            - SEGUNDO: Conceptos como la pirámide invertida de movilidad y la accesibilidad universal.
+            - TERCERO: Estrategias de diseño de infraestructura y sensibilización ciudadana.`;
+            
+            const apiKey = ""; 
+            const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent';
+
+            const payload = {
+                contents: chatHistoryForApi,
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                tools: [{ "google_search": {} }],
+            };
+            
+            try {
+                const response = await fetch(`${apiUrl}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                let aiResponse = "No he podido procesar tu solicitud. Inténtalo de nuevo.";
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    aiResponse = candidate.content.parts[0].text;
+                }
+                
+                addMessageToChat('ai', aiResponse);
+                chatHistoryForApi.push({ role: "model", parts: [{ text: aiResponse }] });
+
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                const errorMessage = "Lo siento, hay problemas de conexión. Inténtalo más tarde.";
+                addMessageToChat('ai', errorMessage);
+                chatHistoryForApi.push({ role: "model", parts: [{ text: errorMessage }] });
+            } finally {
+                typingIndicator.style.display = 'none';
+                chatInput.disabled = false;
+                chatInput.focus();
+            }
+        }
+        
+        async function summarizeAndSave() {
+             const summarizeBtn = document.getElementById('summarize-btn');
+            summarizeBtn.disabled = true;
+            summarizeBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Mejorando tu reflexión...';
+            lucide.createIcons();
+
+            const systemPrompt = "Actúa como un redactor experto o redactora experta. Tu tarea es analizar una conversación sobre seguridad vial con enfoque en peatones/as. A partir de la reflexión inicial del usuario o usuaria y los puntos clave discutidos, genera un párrafo de reflexión MEJORADO y bien redactado. La respuesta debe ser SOLO el párrafo final, sin ningún texto introductorio. Usa un lenguaje claro y párrafos bien estructurados.";
+            
+            const apiKey = "";
+            const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent';
+            
+            const summarizationRequestHistory = [...chatHistoryForApi, { role: "user", parts: [{ text: "Basado en todo lo que hablamos, por favor, ayúdame a redactar una versión mejorada de mi reflexión inicial." }] }];
+
+            const payload = {
+                contents: summarizationRequestHistory,
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            try {
+                const response = await fetch(`${apiUrl}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error(`API request failed with status ${response.status}, ${response.statusText}`);
+                
+                const result = await response.json();
+                const summaryText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (summaryText && summaryText.trim() !== '') {
+                    const reflexionId = `reflexion${currentModalContext.replace('modal', '')}`;
+                    const targetTextarea = document.getElementById(reflexionId);
+                    if (targetTextarea) {
+                        targetTextarea.value = summaryText.trim();
+                        closeModal('ai-chat-modal');
+                    }
+                } else {
+                   // Using a custom modal/alert if alert() is not allowed. For this example, we'll keep alert.
+                   alert("Paso a Paso-Guía no pudo generar un resumen esta vez. Por favor, asegúrate de haber conversado un poco para darle más contexto.");
+                   closeModal('ai-chat-modal');
+                }
+            } catch (error) {
+                console.error("Error summarizing chat:", error);
+                alert("Hubo un error al intentar resumir la conversación. Por favor, inténtalo de nuevo.");
+            } finally {
+                 summarizeBtn.disabled = false;
+                 summarizeBtn.innerHTML = '<i data-lucide="file-check-2" class="w-4 h-4 mr-2"></i> Mejorar y Guardar en Reflexión';
+                 lucide.createIcons();
+            }
+        }
+
+        document.getElementById('chat-send-btn').addEventListener('click', handleSendMessage);
+        document.getElementById('chat-input').addEventListener('keypress', function(e) { if (e.key === 'Enter') handleSendMessage(); });
+
+        function calculateTotalScore() {
+            let total = 0;
+            document.querySelectorAll('.eval-criteria-radio:checked').forEach(radio => {
+                total += parseInt(radio.value, 10);
+            });
+            const scoreElement = document.getElementById('current-score');
+            if(scoreElement) scoreElement.textContent = total;
+        }
+        
+        function downloadProjectAsTxt() {
+            const r1 = document.getElementById('reflexion1').value || "[Aún no has reflexionado sobre la vulnerabilidad de las personas que caminan.]";
+            const r2 = document.getElementById('reflexion2').value || "[Aún no has reflexionado sobre los factores de riesgo.]";
+            const r3 = document.getElementById('reflexion3').value || "[Aún no has analizado normas y buenas prácticas.]";
+
+            const content = `
+REFLEXIONES DEL PROYECTO DE PEATONES/AS - SEGURIDAD Y MOVILIDAD
+============================================================
+
+---
+1. Reflexión: Comprende la vulnerabilidad de las personas que caminan
+---
+${r1}
+
+---
+2. Reflexión: Reconoce los factores de riesgo
+---
+${r2}
+
+---
+3. Reflexión: Consulta las normas y buenas prácticas
+---
+${r3}
+`;
+            const blob = new Blob([content.trim()], { type: "text/plain;charset=utf-8" });
+            saveAs(blob, "Mis_Reflexiones_SV.txt");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            const formContainer = document.getElementById('form-container');
+            if(formContainer) {
+                 const allInnerCards = formContainer.querySelectorAll('.flip-card-inner');
+                formContainer.addEventListener('click', function(event) {
+                    const card = event.target.closest('.flip-card');
+                    if (!card) return;
+                    const innerCard = card.querySelector('.flip-card-inner');
+                    const isAlreadyFlipped = innerCard.classList.contains('is-flipped');
+                    allInnerCards.forEach(c => { c.classList.remove('is-flipped'); });
+                    if (!isAlreadyFlipped) { innerCard.classList.add('is-flipped'); }
+                });
+            }
+            const evaluationMatrix = document.getElementById('evaluation-matrix');
+            if (evaluationMatrix) {
+                evaluationMatrix.addEventListener('change', calculateTotalScore);
+                calculateTotalScore();
+            }
+            const cards = document.querySelectorAll('.step-card');
+            if (cards.length > 0) {
+                 const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                cards.forEach(card => { observer.observe(card); });
+            }
+        });
+    </script>
+</body>
+</html>
